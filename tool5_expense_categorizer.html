@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Expense Categorizer | AI Powered</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FAFBFF;
+    --white: #FFFFFF;
+    --navy: #0F2052;
+    --blue: #2563EB;
+    --light: #EFF6FF;
+    --text: #1E293B;
+    --gray: #64748B;
+    --border: #DBEAFE;
+    --green: #16A34A;
+    --purple: #7C3AED;
+    --orange: #EA580C;
+    --teal: #0D9488;
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: var(--navy);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  header h1 { color: white; font-size: 18px; font-weight: 600; }
+  header p { color: #93C5FD; font-size: 12px; margin-top: 2px; }
+
+  .container { max-width: 900px; margin: 32px auto; padding: 0 20px; }
+
+  .input-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .input-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .input-card p { font-size: 13px; color: var(--gray); margin-bottom: 18px; }
+
+  textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    resize: vertical;
+    min-height: 160px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.7;
+  }
+
+  textarea:focus { border-color: var(--blue); }
+  textarea::placeholder { color: #94A3B8; }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    padding: 12px 24px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+  }
+
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:disabled { background: #93C5FD; cursor: not-allowed; }
+
+  .btn-secondary {
+    padding: 12px 18px;
+    background: var(--light);
+    color: var(--blue);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { background: #DBEAFE; }
+
+  .hint { font-size: 12px; color: var(--gray); margin-left: auto; }
+
+  .result-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  .result-card.visible { display: block; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-header h3 { font-size: 16px; font-weight: 600; }
+
+  .summary-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .pill.total { background: var(--light); color: var(--blue); }
+  .pill.deductible { background: #DCFCE7; color: var(--green); }
+
+  .categories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+
+  .category-block {
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid transparent;
+  }
+
+  .cat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .cat-icon { font-size: 18px; }
+  .cat-name { font-size: 13px; font-weight: 600; }
+  .cat-amount { margin-left: auto; font-size: 14px; font-weight: 700; }
+
+  .expense-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .expense-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.06);
+    color: var(--gray);
+  }
+
+  .expense-item:last-child { border-bottom: none; }
+
+  .tax-note {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .tax-note h4 { font-size: 13px; font-weight: 600; color: #92400E; margin-bottom: 8px; }
+  .tax-note p { font-size: 13px; color: #78350F; line-height: 1.6; }
+
+  .ai-insights {
+    background: var(--light);
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .ai-insights h4 { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--navy); }
+  .ai-insights p { font-size: 13px; line-height: 1.7; color: var(--text); white-space: pre-wrap; }
+
+  .loading { text-align: center; padding: 32px; color: var(--gray); font-size: 14px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) { .categories-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>💰 Smart Expense Categorizer</h1>
+    <p>AI automatically sorts your expenses & identifies tax deductions</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="input-card">
+    <h3>Paste Your Expenses</h3>
+    <p>Enter expenses in any format — one per line with amount. AI will categorize everything automatically.</p>
+    <textarea id="expenseInput" placeholder="Example:
+Office rent - 25000
+Laptop purchase - 85000
+Team lunch - 3500
+Uber to client meeting - 450
+Internet bill - 2000
+Salary to employee - 35000
+CA fees - 8000
+Google Ads - 15000
+Electricity bill office - 3200
+Mobile phone bill - 999
+Printer paper & stationery - 1200
+Software subscription - 2500"></textarea>
+    <div class="toolbar">
+      <button class="btn-primary" id="categorizeBtn" onclick="categorize()">🤖 Categorize with AI</button>
+      <button class="btn-secondary" onclick="loadSample()">📋 Load Sample</button>
+      <span class="hint">Press Ctrl+Enter to analyze</span>
+    </div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>AI is categorizing your expenses...</p>
+    </div>
+
+    <div id="resultContent" style="display:none">
+      <div class="result-header">
+        <h3>📊 Expense Report</h3>
+        <div class="summary-pills">
+          <div class="pill total" id="totalPill">Total: ₹0</div>
+          <div class="pill deductible" id="deductPill">Deductible: ₹0</div>
+        </div>
+      </div>
+
+      <div class="categories-grid" id="categoriesGrid"></div>
+
+      <div class="tax-note" id="taxNote" style="display:none">
+        <h4>⚠️ Tax Deduction Alert</h4>
+        <p id="taxNoteText"></p>
+      </div>
+
+      <div class="ai-insights">
+        <h4>🤖 AI Insights & Recommendations</h4>
+        <p id="aiInsights"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORY_STYLES = {
+  'Office & Rent': { bg: '#EFF6FF', border: '#BFDBFE', icon: '🏢', amtColor: '#1D4ED8' },
+  'Salary & HR': { bg: '#F0FDF4', border: '#BBF7D0', icon: '👥', amtColor: '#15803D' },
+  'Technology': { bg: '#FAF5FF', border: '#E9D5FF', icon: '💻', amtColor: '#7C3AED' },
+  'Marketing': { bg: '#FFF7ED', border: '#FED7AA', icon: '📣', amtColor: '#C2410C' },
+  'Travel': { bg: '#F0FDFA', border: '#99F6E4', icon: '🚗', amtColor: '#0F766E' },
+  'Utilities': { bg: '#FFF1F2', border: '#FECDD3', icon: '⚡', amtColor: '#BE123C' },
+  'Professional Services': { bg: '#FFFBEB', border: '#FDE68A', icon: '📋', amtColor: '#B45309' },
+  'Meals & Entertainment': { bg: '#F0FDF4', border: '#BBF7D0', icon: '🍽️', amtColor: '#16A34A' },
+  'Other': { bg: '#F8FAFC', border: '#E2E8F0', icon: '📦', amtColor: '#475569' },
+};
+
+function loadSample() {
+  document.getElementById('expenseInput').value = `Office rent - 25000
+Laptop purchase - 85000
+Team lunch - 3500
+Uber to client meeting - 450
+Internet bill - 2000
+Salary to employee Rahul - 35000
+CA consultation fees - 8000
+Google Ads campaign - 15000
+Electricity bill office - 3200
+Mobile phone bill - 999
+Printer paper & stationery - 1200
+Zoom subscription - 1300
+Office chair - 8500
+Tea & snacks office - 800
+Courier charges - 350`;
+}
+
+async function categorize() {
+  const text = document.getElementById('expenseInput').value.trim();
+  if (!text) { alert('Please enter some expenses first!'); return; }
+
+  document.getElementById('resultCard').classList.add('visible');
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('resultContent').style.display = 'none';
+  document.getElementById('categorizeBtn').disabled = true;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `You are an expert Indian CA. Categorize these business expenses and provide tax advice.
+
+EXPENSES:
+${text}
+
+Respond ONLY with valid JSON in this exact format (no markdown, no extra text):
+{
+  "categories": {
+    "Office & Rent": [{"item": "name", "amount": 1000}, ...],
+    "Salary & HR": [...],
+    "Technology": [...],
+    "Marketing": [...],
+    "Travel": [...],
+    "Utilities": [...],
+    "Professional Services": [...],
+    "Meals & Entertainment": [...],
+    "Other": [...]
+  },
+  "totalAmount": 12345,
+  "taxDeductibleAmount": 10000,
+  "taxNote": "Brief note about which expenses are fully/partially deductible under Indian tax law",
+  "insights": "3-4 practical recommendations to optimize these expenses for tax savings and business efficiency. Mention specific Indian tax sections where relevant."
+}`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    let text2 = data.content[0].text.trim();
+    text2 = text2.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(text2);
+
+    renderResult(result);
+  } catch (err) {
+    document.getElementById('loading').innerHTML = '<p style="color:red">Error categorizing. Please try again.</p>';
+  }
+
+  document.getElementById('categorizeBtn').disabled = false;
+}
+
+function formatINR(n) {
+  if (!n) return '₹0';
+  if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
+  return '₹' + n.toLocaleString('en-IN');
+}
+
+function renderResult(result) {
+  document.getElementById('totalPill').textContent = `Total: ${formatINR(result.totalAmount)}`;
+  document.getElementById('deductPill').textContent = `Deductible: ${formatINR(result.taxDeductibleAmount)}`;
+
+  const grid = document.getElementById('categoriesGrid');
+  grid.innerHTML = '';
+
+  for (const [cat, items] of Object.entries(result.categories)) {
+    if (!items || items.length === 0) continue;
+    const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES['Other'];
+    const total = items.reduce((s, i) => s + (i.amount || 0), 0);
+
+    const block = document.createElement('div');
+    block.className = 'category-block';
+    block.style.cssText = `background: ${style.bg}; border-color: ${style.border};`;
+    block.innerHTML = `
+      <div class="cat-header">
+        <span class="cat-icon">${style.icon}</span>
+        <span class="cat-name">${cat}</span>
+        <span class="cat-amount" style="color:${style.amtColor}">${formatINR(total)}</span>
+      </div>
+      <div class="expense-list">
+        ${items.map(i => `<div class="expense-item"><span>${i.item}</span><span>${formatINR(i.amount)}</span></div>`).join('')}
+      </div>
+    `;
+    grid.appendChild(block);
+  }
+
+  if (result.taxNote) {
+    document.getElementById('taxNote').style.display = 'block';
+    document.getElementById('taxNoteText').textContent = result.taxNote;
+  }
+
+  document.getElementById('aiInsights').textContent = result.insights;
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('resultContent').style.display = 'block';
+}
+
+document.getElementById('expenseInput').addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'Enter') categorize();
+});
+</script>
+</body>
+</html>

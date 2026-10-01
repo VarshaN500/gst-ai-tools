@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Report Generator | AI Powered</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F9FC;
+    --white: #FFFFFF;
+    --navy: #0D1F3C;
+    --blue: #1B4FD8;
+    --light-blue: #EEF3FF;
+    --green: #059669;
+    --light-green: #ECFDF5;
+    --red: #DC2626;
+    --gray: #6B7280;
+    --border: #E5E9F2;
+    --text: #1F2937;
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+  header {
+    background: var(--navy);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header h1 { color: white; font-size: 18px; font-weight: 600; }
+  header span { color: #93C5FD; font-size: 13px; }
+
+  .layout { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 56px); }
+
+  .sidebar {
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  .sidebar h3 { font-size: 13px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--navy); }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    background: var(--white);
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .generate-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+
+  .generate-btn:hover { background: #1a47c8; }
+  .generate-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+
+  .main { padding: 28px; overflow-y: auto; }
+
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--gray);
+    text-align: center;
+    gap: 12px;
+  }
+
+  .placeholder .icon { font-size: 48px; }
+  .placeholder h3 { font-size: 18px; color: var(--navy); }
+  .placeholder p { font-size: 14px; max-width: 300px; line-height: 1.6; }
+
+  .report { display: none; }
+  .report.visible { display: block; }
+
+  .report-header {
+    background: var(--navy);
+    color: white;
+    padding: 28px 32px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+
+  .report-header h2 { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 6px; }
+  .report-header p { color: #93C5FD; font-size: 13px; }
+
+  .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+
+  .metric-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .metric-card .label { font-size: 12px; color: var(--gray); margin-bottom: 6px; font-weight: 500; }
+  .metric-card .value { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .metric-card .change { font-size: 12px; margin-top: 4px; }
+  .positive { color: var(--green); }
+  .negative { color: var(--red); }
+
+  .ai-report-box {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 28px;
+  }
+
+  .ai-report-box h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+
+  .ai-content { font-size: 14px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+
+  .loading-box {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 40px;
+    text-align: center;
+    display: none;
+  }
+
+  .loading-box.visible { display: block; }
+
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Financial Report Generator</h1>
+  <span>AI-Powered • Indian Business</span>
+</header>
+
+<div class="layout">
+  <div class="sidebar">
+    <h3>Business Details</h3>
+
+    <div class="form-group">
+      <label>Business Name</label>
+      <input type="text" id="bizName" placeholder="e.g. Sharma Traders Pvt Ltd">
+    </div>
+
+    <div class="form-group">
+      <label>Business Type</label>
+      <select id="bizType">
+        <option>Proprietorship</option>
+        <option>Partnership</option>
+        <option>Pvt Ltd Company</option>
+        <option>LLP</option>
+        <option>Freelancer/Consultant</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Industry</label>
+      <select id="industry">
+        <option>Retail/Trading</option>
+        <option>Manufacturing</option>
+        <option>IT/Software</option>
+        <option>Healthcare</option>
+        <option>Restaurant/Food</option>
+        <option>Construction</option>
+        <option>Education</option>
+        <option>Other Services</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Financial Period</label>
+      <select id="period">
+        <option>Q1 2024-25 (Apr-Jun)</option>
+        <option>Q2 2024-25 (Jul-Sep)</option>
+        <option>Q3 2024-25 (Oct-Dec)</option>
+        <option>Q4 2024-25 (Jan-Mar)</option>
+        <option>Full Year 2023-24</option>
+        <option>Full Year 2024-25</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+    <h3>Financial Data (₹)</h3>
+
+    <div class="row2">
+      <div class="form-group">
+        <label>Total Revenue</label>
+        <input type="number" id="revenue" placeholder="50,00,000">
+      </div>
+      <div class="form-group">
+        <label>Previous Period</label>
+        <input type="number" id="prevRevenue" placeholder="42,00,000">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="form-group">
+        <label>Total Expenses</label>
+        <input type="number" id="expenses" placeholder="35,00,000">
+      </div>
+      <div class="form-group">
+        <label>GST Collected</label>
+        <input type="number" id="gst" placeholder="9,00,000">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="form-group">
+        <label>Staff Cost</label>
+        <input type="number" id="staff" placeholder="10,00,000">
+      </div>
+      <div class="form-group">
+        <label>Rent & Utilities</label>
+        <input type="number" id="rent" placeholder="3,00,000">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Additional Notes (optional)</label>
+      <textarea id="notes" rows="2" placeholder="e.g. Opened new branch, launched new product..."></textarea>
+    </div>
+
+    <button class="generate-btn" id="genBtn" onclick="generateReport()">✨ Generate AI Report</button>
+  </div>
+
+  <div class="main">
+    <div class="placeholder" id="placeholder">
+      <div class="icon">📈</div>
+      <h3>Ready to Generate</h3>
+      <p>Fill in your business financial details on the left and click Generate to get your AI-powered report.</p>
+    </div>
+
+    <div class="loading-box" id="loadingBox">
+      <div class="spinner"></div>
+      <p style="color: #6B7280; font-size: 14px;">AI is analyzing your financials...</p>
+    </div>
+
+    <div class="report" id="report">
+      <div class="report-header">
+        <h2 id="reportTitle">Financial Report</h2>
+        <p id="reportSubtitle"></p>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="label">Total Revenue</div>
+          <div class="value" id="m1">—</div>
+          <div class="change" id="m1c"></div>
+        </div>
+        <div class="metric-card">
+          <div class="label">Net Profit</div>
+          <div class="value" id="m2">—</div>
+          <div class="change" id="m2c"></div>
+        </div>
+        <div class="metric-card">
+          <div class="label">Profit Margin</div>
+          <div class="value" id="m3">—</div>
+          <div class="change" id="m3c"></div>
+        </div>
+      </div>
+
+      <div class="ai-report-box">
+        <h3>📋 AI Analysis & Recommendations</h3>
+        <div class="ai-content" id="aiContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function formatINR(n) {
+  if (!n) return '₹0';
+  if (n >= 10000000) return '₹' + (n/10000000).toFixed(2) + ' Cr';
+  if (n >= 100000) return '₹' + (n/100000).toFixed(2) + ' L';
+  return '₹' + n.toLocaleString('en-IN');
+}
+
+async function generateReport() {
+  const bizName = document.getElementById('bizName').value || 'Your Business';
+  const bizType = document.getElementById('bizType').value;
+  const industry = document.getElementById('industry').value;
+  const period = document.getElementById('period').value;
+  const revenue = parseFloat(document.getElementById('revenue').value) || 0;
+  const prevRevenue = parseFloat(document.getElementById('prevRevenue').value) || 0;
+  const expenses = parseFloat(document.getElementById('expenses').value) || 0;
+  const gst = parseFloat(document.getElementById('gst').value) || 0;
+  const staff = parseFloat(document.getElementById('staff').value) || 0;
+  const rent = parseFloat(document.getElementById('rent').value) || 0;
+  const notes = document.getElementById('notes').value;
+
+  if (!revenue && !expenses) {
+    alert('Please enter at least Revenue and Expenses!');
+    return;
+  }
+
+  const profit = revenue - expenses;
+  const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0;
+  const growth = prevRevenue > 0 ? (((revenue - prevRevenue) / prevRevenue) * 100).toFixed(1) : null;
+
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('loadingBox').classList.add('visible');
+  document.getElementById('report').classList.remove('visible');
+  document.getElementById('genBtn').disabled = true;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `You are a senior CA (Chartered Accountant) in India. Generate a professional financial analysis report for this business.
+
+BUSINESS DATA:
+- Business: ${bizName} (${bizType})
+- Industry: ${industry}
+- Period: ${period}
+- Total Revenue: ₹${revenue.toLocaleString('en-IN')}
+- Previous Period Revenue: ₹${prevRevenue.toLocaleString('en-IN')}
+- Total Expenses: ₹${expenses.toLocaleString('en-IN')}
+- Net Profit: ₹${profit.toLocaleString('en-IN')}
+- Profit Margin: ${margin}%
+- GST Collected: ₹${gst.toLocaleString('en-IN')}
+- Staff Costs: ₹${staff.toLocaleString('en-IN')}
+- Rent & Utilities: ₹${rent.toLocaleString('en-IN')}
+- Additional Notes: ${notes || 'None'}
+
+Write a professional yet simple financial report with these sections:
+
+PERFORMANCE SUMMARY:
+[2-3 sentences on overall financial health]
+
+KEY HIGHLIGHTS:
+• [3-4 bullet points on notable financial metrics]
+
+AREAS OF CONCERN:
+• [2-3 issues that need attention, if any]
+
+TAX & COMPLIANCE NOTES:
+• [GST filing status, advance tax, TDS if applicable]
+
+RECOMMENDATIONS FOR NEXT QUARTER:
+• [3-4 specific actionable recommendations]
+
+Keep it professional but easy for a business owner to understand. Use Indian financial context.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const aiText = data.content[0].text;
+
+    document.getElementById('reportTitle').textContent = `${bizName} — Financial Report`;
+    document.getElementById('reportSubtitle').textContent = `${period} • ${bizType} • ${industry}`;
+    document.getElementById('m1').textContent = formatINR(revenue);
+    document.getElementById('m1c').innerHTML = growth ? `<span class="${growth >= 0 ? 'positive' : 'negative'}">${growth >= 0 ? '▲' : '▼'} ${Math.abs(growth)}% vs last period</span>` : '';
+    document.getElementById('m2').textContent = formatINR(profit);
+    document.getElementById('m2c').innerHTML = `<span class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? 'Profitable' : 'Loss Making'}</span>`;
+    document.getElementById('m3').textContent = `${margin}%`;
+    document.getElementById('m3c').innerHTML = `<span class="${margin >= 15 ? 'positive' : margin >= 5 ? '' : 'negative'}">${margin >= 15 ? 'Healthy' : margin >= 5 ? 'Moderate' : 'Low'}</span>`;
+    document.getElementById('aiContent').textContent = aiText;
+
+    document.getElementById('loadingBox').classList.remove('visible');
+    document.getElementById('report').classList.add('visible');
+  } catch (err) {
+    alert('Error generating report. Please try again.');
+    document.getElementById('loadingBox').classList.remove('visible');
+    document.getElementById('placeholder').style.display = 'flex';
+  }
+
+  document.getElementById('genBtn').disabled = false;
+}
+</script>
+</body>
+</html>

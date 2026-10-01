@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITR Simplifier | Understand Your Tax Return</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F0F4FF;
+    --white: #FFFFFF;
+    --primary: #4338CA;
+    --light: #EEF2FF;
+    --text: #1E293B;
+    --gray: #64748B;
+    --border: #C7D2FE;
+    --green: #059669;
+    --orange: #D97706;
+    --red: #DC2626;
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, var(--primary), #6D28D9);
+    color: white;
+    padding: 20px 32px;
+    text-align: center;
+  }
+
+  header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  header p { font-size: 14px; opacity: 0.85; }
+
+  .container { max-width: 780px; margin: 36px auto; padding: 0 20px; }
+
+  .itr-form-selector {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .itr-form-selector h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+
+  .itr-types {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .itr-type {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--white);
+  }
+
+  .itr-type:hover { border-color: var(--primary); background: var(--light); }
+  .itr-type.selected { border-color: var(--primary); background: var(--light); }
+  .itr-type .form-name { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .itr-type .form-for { font-size: 11px; color: var(--gray); margin-top: 4px; line-height: 1.3; }
+
+  .input-section {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .input-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; color: var(--text); }
+
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus { border-color: var(--primary); }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+    margin-top: 6px;
+  }
+
+  .btn:hover { background: #3730a3; }
+  .btn:disabled { background: #A5B4FC; cursor: not-allowed; }
+
+  .result-section {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  .result-section.visible { display: block; }
+
+  .tax-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .tax-card {
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .tax-card.payable { background: #FEF2F2; border: 1px solid #FECACA; }
+  .tax-card.refund { background: #ECFDF5; border: 1px solid #A7F3D0; }
+  .tax-card.neutral { background: var(--light); border: 1px solid var(--border); }
+
+  .tax-card .t-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; color: var(--gray); }
+  .tax-card .t-value { font-size: 20px; font-weight: 700; }
+  .tax-card.payable .t-value { color: var(--red); }
+  .tax-card.refund .t-value { color: var(--green); }
+  .tax-card.neutral .t-value { color: var(--primary); }
+
+  .explanation-box h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  .explanation { font-size: 14px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+
+  .loading { text-align: center; padding: 32px; color: var(--gray); }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .itr-types { grid-template-columns: repeat(2, 1fr); }
+    .grid2 { grid-template-columns: 1fr; }
+    .tax-summary { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 ITR Simplifier</h1>
+  <p>Enter your income details — AI will explain your tax return in simple language</p>
+</header>
+
+<div class="container">
+
+  <div class="itr-form-selector">
+    <h3>Select Your ITR Form</h3>
+    <div class="itr-types">
+      <div class="itr-type selected" onclick="selectITR(this, 'ITR-1')">
+        <div class="form-name">ITR-1</div>
+        <div class="form-for">Salaried employees up to ₹50L</div>
+      </div>
+      <div class="itr-type" onclick="selectITR(this, 'ITR-2')">
+        <div class="form-name">ITR-2</div>
+        <div class="form-for">Capital gains, multiple properties</div>
+      </div>
+      <div class="itr-type" onclick="selectITR(this, 'ITR-3')">
+        <div class="form-name">ITR-3</div>
+        <div class="form-for">Business/professional income</div>
+      </div>
+      <div class="itr-type" onclick="selectITR(this, 'ITR-4')">
+        <div class="form-name">ITR-4</div>
+        <div class="form-for">Presumptive scheme (44AD/44ADA)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-section">
+    <h3>Your Income Details (FY 2024-25)</h3>
+    <div class="grid2">
+      <div class="form-group">
+        <label>Gross Salary / Business Income (₹)</label>
+        <input type="number" id="grossIncome" placeholder="e.g. 1200000">
+      </div>
+      <div class="form-group">
+        <label>Tax Regime</label>
+        <select id="regime">
+          <option value="new">New Regime (Default)</option>
+          <option value="old">Old Regime (with deductions)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>TDS Already Deducted (₹)</label>
+        <input type="number" id="tds" placeholder="e.g. 95000">
+      </div>
+      <div class="form-group">
+        <label>80C Investments (₹) - Old Regime</label>
+        <input type="number" id="deduction80c" placeholder="e.g. 150000">
+      </div>
+      <div class="form-group">
+        <label>HRA Exemption (₹)</label>
+        <input type="number" id="hra" placeholder="e.g. 120000">
+      </div>
+      <div class="form-group">
+        <label>Other Deductions (₹)</label>
+        <input type="number" id="otherDed" placeholder="80D, NPS, etc.">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Any special income? (capital gains, rental, etc.)</label>
+      <input type="text" id="specialIncome" placeholder="e.g. ₹2L from mutual fund LTCG, ₹5000/month rental income">
+    </div>
+    <button class="btn" id="explainBtn" onclick="explainITR()">🧮 Calculate & Explain My Tax</button>
+  </div>
+
+  <div class="result-section" id="resultSection">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>AI is calculating your tax...</p>
+    </div>
+
+    <div id="resultContent" style="display:none">
+      <div class="tax-summary">
+        <div class="tax-card neutral">
+          <div class="t-label">Gross Income</div>
+          <div class="t-value" id="r-gross">—</div>
+        </div>
+        <div class="tax-card neutral">
+          <div class="t-label">Taxable Income</div>
+          <div class="t-value" id="r-taxable">—</div>
+        </div>
+        <div class="tax-card" id="r-status-card">
+          <div class="t-label" id="r-status-label">Tax Payable</div>
+          <div class="t-value" id="r-status-value">—</div>
+        </div>
+      </div>
+
+      <div class="explanation-box">
+        <h3>🤖 AI Explanation in Simple Language</h3>
+        <div class="explanation" id="explanation"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let selectedITR = 'ITR-1';
+
+function selectITR(el, form) {
+  document.querySelectorAll('.itr-type').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedITR = form;
+}
+
+function formatINR(n) {
+  if (!n || isNaN(n)) return '₹0';
+  if (n >= 10000000) return '₹' + (n/10000000).toFixed(2) + ' Cr';
+  if (n >= 100000) return '₹' + (n/100000).toFixed(1) + ' L';
+  return '₹' + Math.abs(n).toLocaleString('en-IN');
+}
+
+async function explainITR() {
+  const gross = parseFloat(document.getElementById('grossIncome').value) || 0;
+  const regime = document.getElementById('regime').value;
+  const tds = parseFloat(document.getElementById('tds').value) || 0;
+  const ded80c = parseFloat(document.getElementById('deduction80c').value) || 0;
+  const hra = parseFloat(document.getElementById('hra').value) || 0;
+  const otherDed = parseFloat(document.getElementById('otherDed').value) || 0;
+  const special = document.getElementById('specialIncome').value;
+
+  if (!gross) { alert('Please enter your income!'); return; }
+
+  document.getElementById('resultSection').classList.add('visible');
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('resultContent').style.display = 'none';
+  document.getElementById('explainBtn').disabled = true;
+
+  const totalDed = regime === 'old' ? (75000 + ded80c + hra + otherDed) : 75000;
+  const taxable = Math.max(0, gross - totalDed);
+
+  document.getElementById('r-gross').textContent = formatINR(gross);
+  document.getElementById('r-taxable').textContent = formatINR(taxable);
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `You are an expert Indian CA helping a taxpayer understand their ITR. Calculate and explain their tax in very simple language.
+
+TAXPAYER DATA:
+- ITR Form: ${selectedITR}
+- Gross Income: ₹${gross.toLocaleString('en-IN')}
+- Tax Regime: ${regime === 'new' ? 'New Regime' : 'Old Regime'}
+- TDS Deducted: ₹${tds.toLocaleString('en-IN')}
+- 80C Investments: ₹${ded80c.toLocaleString('en-IN')}
+- HRA Exemption: ₹${hra.toLocaleString('en-IN')}
+- Other Deductions: ₹${otherDed.toLocaleString('en-IN')}
+- Special Income: ${special || 'None'}
+
+Please provide:
+
+1. TAX CALCULATION:
+Step by step calculation showing gross income → deductions → taxable income → tax as per slabs → cess → final tax
+
+2. TDS vs TAX DUE:
+Whether they get refund or need to pay more tax
+
+3. SIMPLE EXPLANATION:
+Explain this to a common person in very simple Hindi-English mix. Use examples. Tell them what this means for them.
+
+4. MONEY SAVING TIPS:
+2-3 specific tips they can use next year to save more tax legally
+
+Format clearly with the above 4 sections. Keep it simple and practical.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content[0].text;
+
+    const hasRefund = text.toLowerCase().includes('refund');
+    const card = document.getElementById('r-status-card');
+    const label = document.getElementById('r-status-label');
+    const value = document.getElementById('r-status-value');
+
+    if (hasRefund) {
+      card.className = 'tax-card refund';
+      label.textContent = 'You Get Refund';
+      value.textContent = '✅ Check Report';
+    } else {
+      card.className = 'tax-card payable';
+      label.textContent = 'Tax Due';
+      value.textContent = '⚠️ Check Report';
+    }
+
+    document.getElementById('explanation').textContent = text;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('resultContent').style.display = 'block';
+
+  } catch (err) {
+    alert('Error. Please try again.');
+    document.getElementById('loading').style.display = 'none';
+  }
+
+  document.getElementById('explainBtn').disabled = false;
+}
+</script>
+</body>
+</html>
